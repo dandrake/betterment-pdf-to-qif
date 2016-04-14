@@ -66,8 +66,8 @@ def parse_other_activity(line):
     so we return a dictionary with the keys we can figure out and leave
     it to the caller to track the necessary state.
 
-    Transaction types are "Dividend Reinvestment" and "Automatic
-    Deposit" and "Advisory Fee". (Others I'll add later.)
+    Transaction types are "Dividend Reinvestment", "Automatic
+    Deposit", "Advisory Fee", and "Rebalance". (Others I'll add later.)
 
     Returns a dictionary with keys (a subset of!):
 
@@ -78,10 +78,15 @@ def parse_other_activity(line):
     * amount
     * type: right now, one of:
         * div buy: buying after a dividend payment
-        * buy: buying after a deposit
+        * buy, sell: buying after a deposit, selling for rebalance
         * fee sell: selling shares to pay advisory fee
 
+    We need different selling types; we gather up the "fee sell"s and
+    create a fee payment transaction, but for rebalances, we do nothing
+    since those will be, well, balanced by purchases.
+
     Values except the date are all strings.
+
     """
     try:
         ret = {}
@@ -93,31 +98,43 @@ def parse_other_activity(line):
                                             day=int(line[1]),
                                             year=int(line[2]))
                 desc = line[3:slash - 1]
+                ret.update(parse_other_activity(line[slash - 1:]))
+                # above should set 'type' to 'buy' or 'sell' depending
+                # on the amount; we'll overwrite it if we know more.
+                # Right now downstream code really just looks for "buy"
+                # or "sell" as a substring.
                 if 'Reinvestment' in desc:
                     ret['type'] = 'div buy'
                 elif 'Deposit' in desc:
                     ret['type'] = 'buy'
                 elif 'Fee' in desc:
                     ret['type'] = 'fee sell'
-                ret.update(parse_other_activity(line[slash - 1:]))
+
                 return ret
             elif slash == 1:
                 ret['ticker'] = line[2]
-                ret['share_price'] = line[3].lstrip('-$').replace(',', '')
+                ret['share_price'] = line[3].lstrip('$').replace(',', '')
                 # QIF files don't include negative amounts; they list
                 # everything as positive and use the transaction type to
-                # figure out the rest. So okay to strip minus signs.
-                ret['amount'] = line[5].lstrip('-$').replace(',', '')
+                # figure out the rest. So if it's not already a "fee sell",
+                # look for a minus sign to see if it should be a sell.
+                ret['amount'] = line[5].replace('$', '').replace(',', '')
 
                 # We calculate the number of shares on our own; see
                 # discussion in the README.
                 ret['shares'] = '{:.6f}'.format(float(ret['amount']) /
                                                 float(ret['share_price']))
 
-                if abs(float(ret['shares']) - abs(float(line[4]))) >= .001:
+                if abs(float(ret['shares']) - float(line[4])) >= .001:
                     print('wonky number of shares:')
                     print('PDF says', line[4])
                     print('transaction:', ret)
+
+                # use amount to decide "buy" or "sell"
+                if float(ret['amount']) > 0:
+                    ret['type'] = 'buy'
+                else:
+                    ret['type'] = 'sell'
 
                 # check if ticker ok
                 ticker_to_name[ret['ticker']]
@@ -193,14 +210,14 @@ def parse_text(txt):
     #   WHERE type = 'fee sell'
     #   GROUP BY date;
     # and to add corresponding fee-transfer transactions
-    fees = collections.defaultdict(lambda: 0.0)
+    fees = collections.defaultdict(float)
     for trans in [t for t in transactions if t['type'] == 'fee sell']:
         fees[(trans['goal'], trans['date'])] += float(trans['amount'])
     for goal, date in fees.keys():
         transactions.append({'goal': goal,
                              'date': date,
                              'type': 'fee pay',
-                             'amount': fees[(goal, date)]})
+                             'amount': abs(fees[(goal, date)])})
     return transactions
 
 def fmt_date(t):
@@ -266,8 +283,8 @@ O0.00
                                type=action,
                                security=ticker_to_name[trans['ticker']],
                                price=trans['share_price'],
-                               num_shares=trans['shares'],
-                               amount=trans['amount'])
+                               num_shares=trans['shares'].lstrip('-'),
+                               amount=trans['amount'].lstrip('-'))
 
         if trans['goal'] == 'safety net':
             sn.append(q)
