@@ -162,11 +162,11 @@ def parse_text(txt):
     trans_type = None
     transactions = []
     for linenum, line in enumerate(txt):
-        if line == ['BUILD', 'WEALTH']:
+        if line[:2] == ['BUILD', 'WEALTH']:
             goal = 'build wealth'
             trans_type = None
             if DEBUG: print('build wealth starts line', linenum) 
-        elif line == ['SAFETY', 'NET']:
+        elif line[:2] == ['SAFETY', 'NET']:
             goal = 'safety net'
             trans_type = None
             if DEBUG: print('safety net starts on', linenum) 
