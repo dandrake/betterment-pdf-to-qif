@@ -191,7 +191,13 @@ def parse_text(txt):
                     except KeyError:
                         trans['date'] = trans_date
                     try:
-                        sub_trans_type = trans['type']
+                        # the first advisory fee transaction gets correctly classified
+                        # as "fee sell", but after that they're just "sell"; change the type
+                        # appropriately
+                        if trans['type'] == 'sell' and sub_trans_type == 'fee sell':
+                            trans['type'] = 'fee sell'
+                        else:
+                            sub_trans_type = trans['type']
                     except KeyError:
                         trans['type'] = sub_trans_type
                     if DEBUG: print('other trans:', trans)
@@ -300,16 +306,22 @@ O0.00
         snf.write('\n'.join(sn))
 
 
-if __name__ == '__main__':
+def run(fn):
     # we want a list of lines, each split on whitespace
     txt = [line.decode('utf-8') for line in
            subprocess.check_output(['pdftotext', '-nopgbrk', '-layout', 
-                                    sys.argv[1], '-']).splitlines()]
+                                    fn, '-']).splitlines()]
 
-    with open(sys.argv[1] + '-debug.txt', 'w') as f:
+    with open(fn + '-debug.txt', 'w') as f:
         f.write('\n'.join([str(line.split()) for line in txt
                            if not re.match('^\s*$', line)]))
 
     create_qif(parse_text([line.split() for line in txt
                            if not re.match('^\s*$', line)]),
-               sys.argv[1][:-4])
+               fn[:-4])
+
+if __name__ == '__main__':
+    try:
+        run(sys.argv[1])
+    except IndexError:
+        pass
