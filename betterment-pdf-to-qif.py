@@ -53,15 +53,29 @@ def parse_dividend_payment(line):
     except:
         raise ValueError
     return ret
+
+def dateatstart(line):
+    return datetime.date(month=mon_to_num[line[0]],
+                         day=int(line[1]),
+                         year=int(line[2]))
+
+def tickerindex(line):
+    for i, s in enumerate(line):
+        try:
+            _ = ticker_to_name[s]
+            return i
+        except KeyError:
+            pass
+    raise ValueError
     
 def parse_other_activity(line):
     """tricky thing here is that you have two kinds of lines:
-    
-    ['Apr', '2', '2015', 'Dividend', 'Reinvestment', 'Stocks', '/', 'VTV', '$83.55', '0.008', '$0.66', '0.592', '$49.48']
 
-    and
-    
-    ['Stocks', '/', 'VTI', '$107.45', '0.004', '$0.45', '0.460', '$49.46']
+    ['Jul', '12', '2016', 'Dividend', 'Reinvestment', 'MUB', '$113.77', '0.150', '$17.02', '76.690', '$8,725.07']
+
+    and 
+
+    ['VTIP', '$49.54', '0.204', '$10.11', '33.659', '$1,667.46']
 
     so we return a dictionary with the keys we can figure out and leave
     it to the caller to track the necessary state.
@@ -86,71 +100,59 @@ def parse_other_activity(line):
     since those will be, well, balanced by purchases.
 
     Values except the date are all strings.
-
     """
     try:
         ret = {}
-        # just looking for the slash and the type identifies the lines we want
-        slash = line.index('/')
-        if line[slash - 1] == 'Stocks' or line[slash - 1] == 'Bonds':
-            if slash > 1:
-                ret['date'] = datetime.date(month=mon_to_num[line[0]],
-                                            day=int(line[1]),
-                                            year=int(line[2]))
-                desc = line[3:slash - 1]
-                ret.update(parse_other_activity(line[slash - 1:]))
-                # above should set 'type' to 'buy' or 'sell' depending
-                # on the amount; we'll overwrite it if we know more.
-                # Right now downstream code really just looks for "buy"
-                # or "sell" as a substring.
-                if 'Reinvestment' in desc:
-                    ret['type'] = 'div buy'
-                elif 'Deposit' in desc:
-                    ret['type'] = 'buy'
-                elif 'Fee' in desc:
-                    ret['type'] = 'fee sell'
+        i = tickerindex(line)
+        if i == 0:
+            ret['ticker'] = line[0]
+            ret['share_price'] = line[1].lstrip('$').replace(',', '')
+            # QIF files don't include negative amounts; they list
+            # everything as positive and use the transaction type to
+            # figure out the rest. So if it's not already a "fee sell",
+            # look for a minus sign to see if it should be a sell.
+            ret['amount'] = line[3].replace('$', '').replace(',', '')
 
-                return ret
-            elif slash == 1:
-                ret['ticker'] = line[2]
-                ret['share_price'] = line[3].lstrip('$').replace(',', '')
-                # QIF files don't include negative amounts; they list
-                # everything as positive and use the transaction type to
-                # figure out the rest. So if it's not already a "fee sell",
-                # look for a minus sign to see if it should be a sell.
-                ret['amount'] = line[5].replace('$', '').replace(',', '')
+            # We calculate the number of shares on our own; see
+            # discussion in the README.
+            ret['shares'] = '{:.6f}'.format(float(ret['amount']) /
+                                            float(ret['share_price']))
 
-                # We calculate the number of shares on our own; see
-                # discussion in the README.
-                ret['shares'] = '{:.6f}'.format(float(ret['amount']) /
-                                                float(ret['share_price']))
+            if abs(float(ret['shares']) - float(line[2])) >= .001:
+                print('wonky number of shares:')
+                print('PDF says', line[4])
+                print('transaction:', ret)
 
-                if abs(float(ret['shares']) - float(line[4])) >= .001:
-                    print('wonky number of shares:')
-                    print('PDF says', line[4])
-                    print('transaction:', ret)
-
-                # use amount to decide "buy" or "sell"
-                if float(ret['amount']) > 0:
-                    ret['type'] = 'buy'
-                else:
-                    ret['type'] = 'sell'
-
-                # check if ticker ok
-                ticker_to_name[ret['ticker']]
-
-                # for now, ignore the last two fields (total shares and
-                # total value of that security)
-                return ret
+            # use amount to decide "buy" or "sell"
+            if float(ret['amount']) > 0:
+                ret['type'] = 'buy'
             else:
-                # / in position 0???
-                if DEBUG:
-                    print('slash at start!?')
-                    print(line)
-                raise ValueError
+                ret['type'] = 'sell'
+
+            # check if ticker ok
+            ticker_to_name[ret['ticker']]
+
+            # for now, ignore the last two fields (total shares and
+            # total value of that security)
+            return ret
         else:
-            # / not preceded by 'Stocks' or 'Bonds'
-            raise ValueError
+            # line doesn't start with ticker, better start with a date
+            foo = dateatstart(line)
+            if foo is None:
+                print line
+            else:
+                ret['date'] = foo
+            desc = line[3:i-1]
+            ret.update(parse_other_activity(line[i:]))
+            # above sets 'type' to 'buy' or 'sell', here we overwrite it
+            # if we know more
+            if 'Reinvestment' in desc:
+                ret['type'] = 'div buy'
+            elif 'Deposit' in desc:
+                ret['type'] = 'buy'
+            elif 'Fee' in desc:
+                ret['type'] = 'fee sell'
+            return ret
     except:
         raise ValueError
 
