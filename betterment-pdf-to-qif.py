@@ -15,6 +15,8 @@ DEBUG = False
     
 mon_to_num = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
 
+months = mon_to_num.keys()
+
 ticker_to_name = {
     'BNDX': 'Total International Bond ETF',
     'VBR': 'Vanguard Small-Cap Value ETF',
@@ -28,6 +30,7 @@ ticker_to_name = {
     'VOE': 'Vanguard Mid-Cap Value ETF',
     'VTIP': 'Vanguard Short-Term Inflation-Protected Securities ETF',
     'SHV': 'iShares Short Treasury Bond ETF',
+    'EMB': 'Emerging Markets Bonds',
 }
 
 def parse_dividend_payment(line):
@@ -67,7 +70,17 @@ def tickerindex(line):
         except KeyError:
             pass
     raise ValueError
-    
+
+def get_date(line):
+    """
+    look for a date somewhere in the line, return a datetime object or None
+    """
+    for i, piece in enumerate(line):
+        if piece in months:
+            return datetime.date(month=mon_to_num[piece],
+                                 day=int(line[i+1]),
+                                 year=int(line[i+2]))
+
 def parse_other_activity(line):
     """tricky thing here is that you have two kinds of lines:
 
@@ -104,56 +117,47 @@ def parse_other_activity(line):
     try:
         ret = {}
         i = tickerindex(line)
-        if i == 0:
-            ret['ticker'] = line[0]
-            ret['share_price'] = line[1].lstrip('$').replace(',', '')
-            # QIF files don't include negative amounts; they list
-            # everything as positive and use the transaction type to
-            # figure out the rest. So if it's not already a "fee sell",
-            # look for a minus sign to see if it should be a sell.
-            ret['amount'] = line[3].replace('$', '').replace(',', '')
 
-            # We calculate the number of shares on our own; see
-            # discussion in the README.
-            ret['shares'] = '{:.6f}'.format(float(ret['amount']) /
-                                            float(ret['share_price']))
+        d = get_date(line)
+        if d:
+            ret['date'] = d
+        
+        ret['ticker'] = line[i]
+        
+        ret['share_price'] = line[i+1].lstrip('$').replace(',', '')
+        # QIF files don't include negative amounts; they list
+        # everything as positive and use the transaction type to
+        # figure out the rest. So if it's not already a "fee sell",
+        # look for a minus sign to see if it should be a sell.
+        ret['amount'] = line[i+3].replace('$', '').replace(',', '')
 
-            if abs(float(ret['shares']) - float(line[2])) >= .001:
-                print('wonky number of shares:')
-                print('PDF says', line[4])
-                print('transaction:', ret)
-
-            # use amount to decide "buy" or "sell"
-            if float(ret['amount']) > 0:
-                ret['type'] = 'buy'
-            else:
-                ret['type'] = 'sell'
-
-            # check if ticker ok
-            ticker_to_name[ret['ticker']]
-
-            # for now, ignore the last two fields (total shares and
-            # total value of that security)
-            return ret
+        desc = ''.join(line)
+        if 'Reinvestment' in desc:
+            ret['type'] = 'div buy'
+        elif 'Deposit' in desc:
+            ret['type'] = 'buy'
+        elif 'Fee' in desc:
+            ret['type'] = 'fee sell'
+        elif float(ret['amount']) > 0:
+            ret['type'] = 'buy'
         else:
-            # line doesn't start with ticker, better start with a date
-            foo = dateatstart(line)
-            if foo is None:
-                print line
-            else:
-                ret['date'] = foo
-            desc = line[3:i-1]
-            ret.update(parse_other_activity(line[i:]))
-            # above sets 'type' to 'buy' or 'sell', here we overwrite it
-            # if we know more
-            if 'Reinvestment' in desc:
-                ret['type'] = 'div buy'
-            elif 'Deposit' in desc:
-                ret['type'] = 'buy'
-            elif 'Fee' in desc:
-                ret['type'] = 'fee sell'
-            return ret
-    except:
+            ret['type'] = 'sell'
+
+        # We calculate the number of shares on our own; see
+        # discussion in the README.
+        ret['shares'] = '{:.6f}'.format(float(ret['amount']) /
+                                        float(ret['share_price']))
+        if abs(float(ret['shares']) - float(line[i+2])) >= .001:
+            print('wonky number of shares:')
+            print('PDF says', line[4])
+            print('transaction:', ret)
+
+        # check if ticker ok
+        ticker_to_name[ret['ticker']]
+
+        return ret
+    except Exception as err:
+        if DEBUG: print(err)
         raise ValueError
 
 def parse_text(txt):
