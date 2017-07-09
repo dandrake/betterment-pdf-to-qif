@@ -31,6 +31,8 @@ ticker_to_name = {
     'VTIP': 'Vanguard Short-Term Inflation-Protected Securities ETF',
     'SHV': 'iShares Short Treasury Bond ETF',
     'EMB': 'Emerging Markets Bonds',
+    'IEMG': 'iShares Core MSCI Emerging Markets ETF',
+    
 }
 
 def parse_dividend_payment(line):
