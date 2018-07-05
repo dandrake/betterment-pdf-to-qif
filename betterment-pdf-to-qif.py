@@ -11,7 +11,7 @@ import re
 import datetime
 import collections
 
-DEBUG = False
+DEBUG = True
     
 mon_to_num = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
 
@@ -32,7 +32,9 @@ ticker_to_name = {
     'SHV': 'iShares Short Treasury Bond ETF',
     'EMB': 'Emerging Markets Bonds',
     'IEMG': 'iShares Core MSCI Emerging Markets ETF',
-    
+    'VCIT': 'Vanguard Intermediate-Term Corporate Bond ETF',
+    'TFI': 'SPDR Nuveen Barclays Municipal Bond ETF',
+    'SCHF': 'Developed Markets',
 }
 
 def parse_dividend_payment(line):
@@ -109,6 +111,8 @@ def parse_other_activity(line):
         * div buy: buying after a dividend payment
         * buy, sell: buying after a deposit, selling for rebalance
         * fee sell: selling shares to pay advisory fee
+        * tlh: buys and sells for a tax loss harvest. Note that after the first
+          transaction for a TLH, further ones will be marked as a regular buy or sell.
 
     We need different selling types; we gather up the "fee sell"s and
     create a fee payment transaction, but for rebalances, we do nothing
@@ -140,6 +144,8 @@ def parse_other_activity(line):
             ret['type'] = 'buy'
         elif 'Fee' in desc:
             ret['type'] = 'fee sell'
+        elif 'Harvesting' in desc:
+            ret['type'] = 'tlh'
         elif float(ret['amount']) > 0:
             ret['type'] = 'buy'
         else:
@@ -183,6 +189,7 @@ def parse_text(txt):
             if DEBUG: print('done with goals line', linenum)
 
         if goal is not None:
+            sub_trans_type = None
             if trans_type == 'dividend':
                 try:
                     trans = parse_dividend_payment(line)
@@ -204,10 +211,17 @@ def parse_text(txt):
                         # appropriately
                         if trans['type'] == 'sell' and sub_trans_type == 'fee sell':
                             trans['type'] = 'fee sell'
+                        # similar for TLH: first one is marked as 'tlh', further ones are buy or sell
+                        elif sub_trans_type == 'tlh':
+                            # we'll handle whether it's a buy or sell later
+                            trans['type'] = 'tlh'
+                            if DEBUG: print('resetting  trans[type]')
                         else:
+                            if DEBUG: print('setting sub_trans_type to', trans['type'])
                             sub_trans_type = trans['type']
                     except KeyError:
                         trans['type'] = sub_trans_type
+
                     if DEBUG: print('other trans:', trans)
                     trans['goal'] = goal
                     transactions.append(trans)
@@ -237,6 +251,17 @@ def parse_text(txt):
 def fmt_date(t):
     return t['date'].strftime('%m/%d/%Y')
 
+def set_memo(trans):
+    trans['memo'] = ''
+
+    if trans['type'] == 'div buy':
+        trans['memo'] = 'dividend reinvestment'
+    elif 'tlh' in trans['type']:
+        trans['memo'] = 'tax loss harvesting'
+    if DEBUG and trans['memo'] != '': print('in set_memo, trans: ', trans)
+
+    # later: maybe do allocation change; rebalance; charitable gifts
+
 def create_qif(transactions, fn):
     # the initial space below is necessary!
     hdr = r""" !Account
@@ -252,6 +277,7 @@ Y{security}
 I{price}
 Q{num_shares}
 T{amount}
+M{memo}
 O0.00
 ^"""
 
@@ -286,6 +312,13 @@ O0.00
             q = fee.format(date=fmt_date(trans),
                            amount=trans['amount'])
         else:
+            if trans['type'] == 'tlh':
+                if DEBUG: print('create_qif:', trans)
+                if trans['shares'][0] == '-':
+                    trans['type'] = 'tlh sell'
+                else:
+                    trans['type'] = 'tlh buy'
+            
             if 'buy' in trans['type']:
                 action = 'Buy'
             elif 'sell' in trans['type']:
@@ -293,12 +326,16 @@ O0.00
             else:
                 print('weird, transaction not dividend, fee, buy, or sell:', trans)
                 raise ValueError
+
+            set_memo(trans)
+
             q = buysell.format(date=fmt_date(trans),
                                type=action,
                                security=ticker_to_name[trans['ticker']],
                                price=trans['share_price'],
                                num_shares=trans['shares'].lstrip('-'),
-                               amount=trans['amount'].lstrip('-'))
+                               amount=trans['amount'].lstrip('-'),
+                               memo=trans['memo'])
 
         if trans['goal'] == 'safety net':
             sn.append(q)
