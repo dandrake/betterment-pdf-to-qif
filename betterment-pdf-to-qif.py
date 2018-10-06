@@ -35,6 +35,8 @@ ticker_to_name = {
     'VCIT': 'Vanguard Intermediate-Term Corporate Bond ETF',
     'TFI': 'SPDR Nuveen Barclays Municipal Bond ETF',
     'SCHF': 'Developed Markets',
+    'AGG': 'iShares Core Total US Bond Market ETF',
+    'IWS': 'iShares Russell Mid-Cap Value ETF',
 }
 
 def parse_dividend_payment(line):
@@ -184,10 +186,13 @@ def parse_text(txt):
             goal = 'safety net'
             trans_type = None
             if DEBUG: print('safety net starts on', linenum) 
-        elif line[:2] == ['CASH', 'ACTIVITY']:
+        elif line[:3] == 'WORLD CUP 2026'.split():
+            goal = 'world cup'
+            trans_type = None
+            if DEBUG: print('world cup starts on', linenum)
+        elif line[:2] == 'SMART SAVER'.split():
             goal = None
             if DEBUG: print('done with goals line', linenum)
-
         if goal is not None:
             sub_trans_type = None
             if trans_type == 'dividend':
@@ -302,6 +307,7 @@ O0.00
 
     bw = [hdr.format('Build Wealth')]
     sn = [hdr.format('Safety Net')]
+    wc = [hdr.format('World Cup')]
 
     for trans in transactions:
         if 'div pay' == trans['type']:
@@ -341,6 +347,8 @@ O0.00
             sn.append(q)
         elif trans['goal'] == 'build wealth':
             bw.append(q)
+        elif trans['goal'] == 'world cup':
+            wc.append(q)
         else:
             print('transaction has no goal!', trans)
             raise ValueError
@@ -349,6 +357,8 @@ O0.00
         bwf.write('\n'.join(bw))
     with open(fn + '-safety_net.qif', 'w') as snf:
         snf.write('\n'.join(sn))
+    with open(fn + '-world_cup.qif', 'w') as wcf:
+        wcf.write('\n'.join(wc))
 
 
 def run(fn):
