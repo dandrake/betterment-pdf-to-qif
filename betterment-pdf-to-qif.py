@@ -34,9 +34,12 @@ ticker_to_name = {
     'IEMG': 'iShares Core MSCI Emerging Markets ETF',
     'VCIT': 'Vanguard Intermediate-Term Corporate Bond ETF',
     'TFI': 'SPDR Nuveen Barclays Municipal Bond ETF',
-    'SCHF': 'Developed Markets',
+    'SCHF': 'Schwab International Equity ETF',
+    'SCHB': 'Schwab U.S. Broad Market ETF',
     'AGG': 'iShares Core Total US Bond Market ETF',
     'IWS': 'iShares Russell Mid-Cap Value ETF',
+    'IWN': 'iShares Russell 2000 Value ETF',
+    'SCHV': 'Schwab US Large-Cap Value',
 }
 
 def parse_dividend_payment(line):
