@@ -236,9 +236,11 @@ def parse_text(txt):
                 except ValueError:
                     pass
 
-            if line == ['Dividend', 'Payment', 'Detail']:
+            # use substring / subset match instead of line = ['a', 'b', 'c'], since
+            # the exact contents of the line vary a bit
+            if 'Dividend Payment Detail' in ' '.join(line):
                 trans_type = 'dividend'
-            elif line == ['Quarterly', 'Activity', 'Detail']:
+            elif 'Quarterly Activity Detail' in ' '.join(line):
                 trans_type = 'other'
 
     # now we want, as we would say in SQL,
