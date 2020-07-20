@@ -40,6 +40,8 @@ ticker_to_name = {
     'IWS': 'iShares Russell Mid-Cap Value ETF',
     'IWN': 'iShares Russell 2000 Value ETF',
     'SCHV': 'Schwab US Large-Cap Value',
+    'ITOT': 'iShares Core S&P Total U.S. Stock Market ETF',
+    'IEFA': 'iShares Core MSCI EAFE ETF',
 }
 
 def parse_dividend_payment(line):
