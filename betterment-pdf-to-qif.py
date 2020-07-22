@@ -42,6 +42,7 @@ ticker_to_name = {
     'SCHV': 'Schwab US Large-Cap Value',
     'ITOT': 'iShares Core S&P Total U.S. Stock Market ETF',
     'IEFA': 'iShares Core MSCI EAFE ETF',
+    'JPST': 'JPMorgan Ultra-Short Income ETF (Aggregate Bond)',
 }
 
 def parse_dividend_payment(line):
