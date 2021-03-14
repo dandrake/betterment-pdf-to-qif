@@ -245,6 +245,9 @@ def parse_text(txt):
                 trans_type = 'dividend'
             elif 'Quarterly Activity Detail' in ' '.join(line):
                 trans_type = 'other'
+            elif 'Monthly Activity Detail' in ' '.join(line):
+                trans_type = 'other'
+
 
     # now we want, as we would say in SQL,
     #   SELECT goal, date, SUM(amount)
