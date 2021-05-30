@@ -247,6 +247,8 @@ def parse_text(txt):
                 trans_type = 'other'
             elif 'Monthly Activity Detail' in ' '.join(line):
                 trans_type = 'other'
+            elif 'Snapshot Activity Detail' in ' '.join(line):
+                trans_type = 'other'
 
 
     # now we want, as we would say in SQL,
