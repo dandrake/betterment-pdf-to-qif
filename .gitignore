@@ -1,4 +1,5 @@
 *.qif
 *.pdf
 *debug.txt
+__pycache__
 

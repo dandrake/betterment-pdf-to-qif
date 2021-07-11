@@ -13,36 +13,36 @@ import collections
 
 DEBUG = True
     
-mon_to_num = {'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6, 'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12}
+mon_to_num = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6, 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
 
 months = mon_to_num.keys()
 
 ticker_to_name = {
-    'BNDX': 'Total International Bond ETF',
-    'VBR': 'Vanguard Small-Cap Value ETF',
-    'VTI': 'Vanguard Total Stock Market ETF',
-    'VTV': 'Vanguard Value ETF',
-    'LQD': 'iShares iBoxx $ Investment Grade Corporate Bond ETF',
-    'VEA': 'FTSE Developed Markets ETF',
-    'VWO': 'Vanguard FTSE Emerging Markets ETF',
-    'MUB': 'Municipal Bonds ETF',
-    'VWOB': 'Vanguard Emerging Markets Government Bond ETF',
-    'VOE': 'Vanguard Mid-Cap Value ETF',
-    'VTIP': 'Vanguard Short-Term Inflation-Protected Securities ETF',
-    'SHV': 'iShares Short Treasury Bond ETF',
-    'EMB': 'Emerging Markets Bonds',
-    'IEMG': 'iShares Core MSCI Emerging Markets ETF',
-    'VCIT': 'Vanguard Intermediate-Term Corporate Bond ETF',
-    'TFI': 'SPDR Nuveen Barclays Municipal Bond ETF',
-    'SCHF': 'Schwab International Equity ETF',
-    'SCHB': 'Schwab U.S. Broad Market ETF',
-    'AGG': 'iShares Core Total US Bond Market ETF',
-    'IWS': 'iShares Russell Mid-Cap Value ETF',
-    'IWN': 'iShares Russell 2000 Value ETF',
-    'SCHV': 'Schwab US Large-Cap Value',
-    'ITOT': 'iShares Core S&P Total U.S. Stock Market ETF',
-    'IEFA': 'iShares Core MSCI EAFE ETF',
-    'JPST': 'JPMorgan Ultra-Short Income ETF (Aggregate Bond)',
+    'bndx': 'Total International Bond ETF',
+    'vbr': 'Vanguard Small-Cap Value ETF',
+    'vti': 'Vanguard Total Stock Market ETF',
+    'vtv': 'Vanguard Value ETF',
+    'lqd': 'iShares iBoxx $ Investment Grade Corporate Bond ETF',
+    'vea': 'FTSE Developed Markets ETF',
+    'vwo': 'Vanguard FTSE Emerging Markets ETF',
+    'mub': 'Municipal Bonds ETF',
+    'vwob': 'Vanguard Emerging Markets Government Bond ETF',
+    'voe': 'Vanguard Mid-Cap Value ETF',
+    'vtip': 'Vanguard Short-Term Inflation-Protected Securities ETF',
+    'shv': 'iShares Short Treasury Bond ETF',
+    'emb': 'Emerging Markets Bonds',
+    'iemg': 'iShares Core MSCI Emerging Markets ETF',
+    'vcit': 'Vanguard Intermediate-Term Corporate Bond ETF',
+    'tfi': 'SPDR Nuveen Barclays Municipal Bond ETF',
+    'schf': 'Schwab International Equity ETF',
+    'schb': 'Schwab U.S. Broad Market ETF',
+    'agg': 'iShares Core Total US Bond Market ETF',
+    'iws': 'iShares Russell Mid-Cap Value ETF',
+    'iwn': 'iShares Russell 2000 Value ETF',
+    'schv': 'Schwab US Large-Cap Value',
+    'itot': 'iShares Core S&P Total U.S. Stock Market ETF',
+    'iefa': 'iShares Core MSCI EAFE ETF',
+    'jpst': 'JPMorgan Ultra-Short Income ETF (Aggregate Bond)',
 }
 
 def parse_dividend_payment(line):
@@ -184,19 +184,19 @@ def parse_text(txt):
     trans_type = None
     transactions = []
     for linenum, line in enumerate(txt):
-        if line[:2] == ['BUILD', 'WEALTH']:
+        if line[:2] == 'build wealth'.split():
             goal = 'build wealth'
             trans_type = None
             if DEBUG: print('build wealth starts line', linenum) 
-        elif line[:2] == ['SAFETY', 'NET']:
+        elif line[:2] == 'safety net'.split():
             goal = 'safety net'
             trans_type = None
             if DEBUG: print('safety net starts on', linenum) 
-        elif line[:3] == 'WORLD CUP 2026'.split():
+        elif line[:3] == 'world cup 2026'.split():
             goal = 'world cup'
             trans_type = None
             if DEBUG: print('world cup starts on', linenum)
-        elif line[:2] == 'SMART SAVER'.split():
+        elif line[:2] == 'smart saver'.split():
             goal = None
             if DEBUG: print('done with goals line', linenum)
         if goal is not None:
@@ -241,13 +241,13 @@ def parse_text(txt):
 
             # use substring / subset match instead of line = ['a', 'b', 'c'], since
             # the exact contents of the line vary a bit
-            if 'Dividend Payment Detail' in ' '.join(line):
+            if 'dividend payment detail' in ' '.join(line):
                 trans_type = 'dividend'
-            elif 'Quarterly Activity Detail' in ' '.join(line):
+            elif 'quarterly activity detail' in ' '.join(line):
                 trans_type = 'other'
-            elif 'Monthly Activity Detail' in ' '.join(line):
+            elif 'monthly activity detail' in ' '.join(line):
                 trans_type = 'other'
-            elif 'Snapshot Activity Detail' in ' '.join(line):
+            elif 'snapshot activity detail' in ' '.join(line):
                 trans_type = 'other'
 
 
@@ -384,7 +384,7 @@ def run(fn):
         f.write('\n'.join([str(line.split()) for line in txt
                            if not re.match('^\s*$', line)]))
 
-    create_qif(parse_text([line.split() for line in txt
+    create_qif(parse_text([line.lower().split() for line in txt
                            if not re.match('^\s*$', line)]),
                fn[:-4])
 
