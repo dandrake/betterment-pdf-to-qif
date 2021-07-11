@@ -146,13 +146,13 @@ def parse_other_activity(line):
         ret['amount'] = line[i+3].replace('$', '').replace(',', '')
 
         desc = ''.join(line)
-        if 'Reinvestment' in desc:
+        if 'reinvestment' in desc:
             ret['type'] = 'div buy'
-        elif 'Deposit' in desc:
+        elif 'deposit' in desc:
             ret['type'] = 'buy'
-        elif 'Fee' in desc:
+        elif 'fee' in desc:
             ret['type'] = 'fee sell'
-        elif 'Harvesting' in desc:
+        elif 'harvesting' in desc:
             ret['type'] = 'tlh'
         elif float(ret['amount']) > 0:
             ret['type'] = 'buy'
