@@ -43,6 +43,7 @@ ticker_to_name = {
     'itot': 'iShares Core S&P Total U.S. Stock Market ETF',
     'iefa': 'iShares Core MSCI EAFE ETF',
     'jpst': 'JPMorgan Ultra-Short Income ETF (Aggregate Bond)',
+    'gbil': 'Goldman Sachs TreasuryAccess 01 Year ETF',
 }
 
 def parse_dividend_payment(line):

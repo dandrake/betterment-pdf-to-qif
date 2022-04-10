@@ -7,9 +7,6 @@ To get data out of MD, use the Extract Data extension. That gives a CSV.
 
 Then to get the totals from my statement, use this.
 
-TODO: conceptually, I just need a join between those two, and then to
-subtract.
-
 
 """
 
@@ -29,7 +26,6 @@ def normalized_key(goal_):
         return 'worldcup'
     else:
         raise ValueError(f"Cannot normalize goal '{goal_}'.")
-
 
 
 class MoneydanceExtractDataParser:
@@ -133,13 +129,14 @@ class BettermentStatementParser:
 
 
 class HoldingsComparer:
-    def __init__(self, md, bment):
+    def __init__(self, md, bment, debug=False):
+        self.debug = debug
         self.comparisons = self.compare_goals(md, bment)
 
     def compare_goals(self, md, bment, debug=False):
         comparisons = {}
         for goal in md:
-            print(f'{goal=}')
+            if self.debug: print(f'{goal=}')
             comparisons[goal] = self.compare_holdings(md[goal], bment[goal])
         return comparisons
 
@@ -156,7 +153,7 @@ class HoldingsComparer:
             except KeyError:
                 bment_shares = '0'
             diff = float(md_shares) - float(bment_shares)
-            print(f'{ticker=}, {md_shares=}, {bment_shares=}, {diff=}')
+            if self.debug: print(f'{ticker=}, {md_shares=}, {bment_shares=}, {diff=}')
             comparisons[(abs(diff), ticker)] = {'moneydance': md_shares,
                                                'betterment': bment_shares,
                                                'diff': diff}
@@ -191,11 +188,18 @@ class ComparisonWriter:
                 
 
 if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
 
-    md_holdings = MoneydanceExtractDataParser(sys.argv[2]).holdings
-    bment_holdings = BettermentStatementParser(sys.argv[1]).holdings
+    parser.add_argument("--moneydance", help="CSV file of Moneydance account data from the Extract Data extension")
+    parser.add_argument("--betterment", help="Text file of parsed Betterment statement data")
+    parser.add_argument("--output", default="holdings-compared.csv", help="Output file name")
+    args = parser.parse_args()
+    
+    md_holdings = MoneydanceExtractDataParser(args.moneydance).holdings
+    bment_holdings = BettermentStatementParser(args.betterment).holdings
     comparer = HoldingsComparer(md_holdings, bment_holdings)
     rows = ComparisonSorter(comparer.comparisons).sorted
-    ComparisonWriter(rows, 'compared.csv')
+    ComparisonWriter(rows, args.output)
     
     
