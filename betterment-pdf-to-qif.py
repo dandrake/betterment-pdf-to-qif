@@ -12,7 +12,7 @@ import datetime
 import collections
 
 DEBUG = True
-    
+
 mon_to_num = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6, 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
 
 months = mon_to_num.keys()
@@ -44,6 +44,7 @@ ticker_to_name = {
     'iefa': 'iShares Core MSCI EAFE ETF',
     'jpst': 'JPMorgan Ultra-Short Income ETF (Aggregate Bond)',
     'gbil': 'Goldman Sachs TreasuryAccess 01 Year ETF',
+    'spyv': 'SPDR S&P 500 Value ETF',
 }
 
 def parse_dividend_payment(line):
@@ -99,7 +100,7 @@ def parse_other_activity(line):
 
     ['Jul', '12', '2016', 'Dividend', 'Reinvestment', 'MUB', '$113.77', '0.150', '$17.02', '76.690', '$8,725.07']
 
-    and 
+    and
 
     ['VTIP', '$49.54', '0.204', '$10.11', '33.659', '$1,667.46']
 
@@ -136,9 +137,9 @@ def parse_other_activity(line):
         d = get_date(line)
         if d:
             ret['date'] = d
-        
+
         ret['ticker'] = line[i]
-        
+
         ret['share_price'] = line[i+1].lstrip('$').replace(',', '')
         # QIF files don't include negative amounts; they list
         # everything as positive and use the transaction type to
@@ -188,11 +189,11 @@ def parse_text(txt):
         if line[:2] == 'build wealth'.split():
             goal = 'build wealth'
             trans_type = None
-            if DEBUG: print('build wealth starts line', linenum) 
+            if DEBUG: print('build wealth starts line', linenum)
         elif line[:2] == 'safety net'.split():
             goal = 'safety net'
             trans_type = None
-            if DEBUG: print('safety net starts on', linenum) 
+            if DEBUG: print('safety net starts on', linenum)
         elif line[:3] == 'world cup 2026'.split():
             goal = 'world cup'
             trans_type = None
@@ -338,7 +339,7 @@ O0.00
                     trans['type'] = 'tlh sell'
                 else:
                     trans['type'] = 'tlh buy'
-            
+
             if 'buy' in trans['type']:
                 action = 'Buy'
             elif 'sell' in trans['type']:
@@ -378,7 +379,7 @@ O0.00
 def run(fn):
     # we want a list of lines, each split on whitespace
     txt = [line.decode('utf-8') for line in
-           subprocess.check_output(['pdftotext', '-nopgbrk', '-layout', 
+           subprocess.check_output(['pdftotext', '-nopgbrk', '-layout',
                                     fn, '-']).splitlines()]
 
     with open(fn + '-debug.txt', 'w') as f:
