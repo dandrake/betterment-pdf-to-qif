@@ -45,7 +45,12 @@ ticker_to_name = {
     'jpst': 'JPMorgan Ultra-Short Income ETF (Aggregate Bond)',
     'gbil': 'Goldman Sachs TreasuryAccess 01 Year ETF',
     'spyv': 'SPDR S&P 500 Value ETF',
+    'stip': 'iShares 0-5 Year TIPS Bond ETF',
 }
+
+# New ticker here -- add it , then in Moneydance for the relevant account create
+# a new security. Set the "Security ID" and Security Name to the value
+# above; the QIFs we generate match on that name, not the ticker.
 
 def parse_dividend_payment(line):
     """
