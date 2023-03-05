@@ -11,7 +11,7 @@ import re
 import datetime
 import collections
 
-DEBUG = True
+DEBUG = False
 
 mon_to_num = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6, 'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12}
 
@@ -189,25 +189,35 @@ def parse_text(txt):
     """
     goal = None
     trans_type = None
+    sub_trans_type = None
     transactions = []
     for linenum, line in enumerate(txt):
         if line[:2] == 'build wealth'.split():
             goal = 'build wealth'
             trans_type = None
+            sub_trans_type = None
             if DEBUG: print('build wealth starts line', linenum)
         elif line[:2] == 'safety net'.split():
             goal = 'safety net'
             trans_type = None
+            sub_trans_type = None
             if DEBUG: print('safety net starts on', linenum)
         elif line[:3] == 'world cup 2026'.split():
             goal = 'world cup'
             trans_type = None
+            sub_trans_type = None
             if DEBUG: print('world cup starts on', linenum)
         elif line[:2] == 'smart saver'.split():
             goal = None
             if DEBUG: print('done with goals line', linenum)
         if goal is not None:
-            sub_trans_type = None
+            if sub_trans_type is not None:
+                if sub_trans_type == 'fee sell':
+                    if DEBUG: print(f'line 212, sub_trans_type is fee sell, not resetting')
+                    else:
+                        if DEBUG: print(f'line 214, {sub_trans_type=}, setting to None')
+                        
+                        sub_trans_type = None
             if trans_type == 'dividend':
                 try:
                     trans = parse_dividend_payment(line)
@@ -235,7 +245,7 @@ def parse_text(txt):
                             trans['type'] = 'tlh'
                             if DEBUG: print('resetting  trans[type]')
                         else:
-                            if DEBUG: print('setting sub_trans_type to', trans['type'])
+                            if DEBUG: print(f'now, {sub_trans_type=}; setting sub_trans_type to {trans["type"]=}')
                             sub_trans_type = trans['type']
                     except KeyError:
                         trans['type'] = sub_trans_type
@@ -283,7 +293,9 @@ def set_memo(trans):
         trans['memo'] = 'dividend reinvestment'
     elif 'tlh' in trans['type']:
         trans['memo'] = 'tax loss harvesting'
-    if DEBUG and trans['memo'] != '': print('in set_memo, trans: ', trans)
+    elif 'fee sell' in trans['type']:
+        trans['memo'] = 'advisory fee sell'
+    if DEBUG and 'sell' in trans['memo']: print('in set_memo, trans: ', trans)
 
     # later: maybe do allocation change; rebalance; charitable gifts
 
