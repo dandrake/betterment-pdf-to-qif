@@ -1,0 +1,18 @@
+* Workflow for comparing Moneydance holdings and Betterment statements
+
+For now -- [2023-07-01 Sat] -- here's a not-too-annoying way to compare
+holdings and make sure they match up.
+
+1. Run [[file:compare-holdings.py::"""The ultimate goal here is to export data from Moneydance, then parse the][compare-holdings.py]] with a debug flag and dump the output into a
+   CSV:
+
+   #+begin_src shell
+     python compare-holdings.py --betterment betterment-statement.pdf-debug.txt --debug > foo.csv
+   #+end_src
+
+2. That gives Betterment holdings in something Gnumeric can use.
+
+3. In Moneydance, go to the Portfolio report, set the Betterment accounts and a date,
+   and click Save to output the CSV.
+
+4. Now you can copy and paste, do a formula for the difference, and so on.
