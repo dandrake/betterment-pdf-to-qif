@@ -2,4 +2,5 @@
 *.pdf
 *debug.txt
 __pycache__
+put_qifs_*
 
