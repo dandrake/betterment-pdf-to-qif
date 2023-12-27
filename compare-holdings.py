@@ -15,7 +15,7 @@ Then to get the totals from my statement, use this.
 import sys
 import csv
 from collections import defaultdict
-from betterment import ticker_to_name
+from betterment_pdf_to_qif import ticker_to_name
 
 def normalized_key(goal_):
     goal = goal_.lower()
