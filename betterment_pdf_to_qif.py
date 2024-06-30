@@ -340,7 +340,6 @@ O0.00
 ^"""
 
     bw = [hdr.format('Build Wealth')]
-    sn = [hdr.format('Safety Net')]
     wc = [hdr.format('World Cup')]
 
     for trans in transactions:
@@ -377,9 +376,7 @@ O0.00
                                amount=trans['amount'].lstrip('-'),
                                memo=trans['memo'])
 
-        if trans['goal'] == 'safety net':
-            sn.append(q)
-        elif trans['goal'] == 'build wealth':
+        if trans['goal'] == 'build wealth':
             bw.append(q)
         elif trans['goal'] == 'world cup':
             wc.append(q)
@@ -389,8 +386,6 @@ O0.00
 
     with open(fn + '-build_wealth.qif', 'w') as bwf:
         bwf.write('\n'.join(bw))
-    with open(fn + '-safety_net.qif', 'w') as snf:
-        snf.write('\n'.join(sn))
     with open(fn + '-world_cup.qif', 'w') as wcf:
         wcf.write('\n'.join(wc))
 
