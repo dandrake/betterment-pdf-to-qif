@@ -216,7 +216,7 @@ def parse_text(txt):
                     if DEBUG: print(f'line 212, sub_trans_type is fee sell, not resetting')
                     else:
                         if DEBUG: print(f'line 214, {sub_trans_type=}, setting to None')
-                        
+
                         sub_trans_type = None
             if trans_type == 'dividend':
                 try:
@@ -401,10 +401,10 @@ def run(fn):
 
     with open(fn + '-debug.txt', 'w') as f:
         f.write('\n'.join([str(line.split()) for line in txt
-                           if not re.match('^\s*$', line)]))
+                           if not re.match(r'^\s*$', line)]))
 
     create_qif(parse_text([line.lower().split() for line in txt
-                           if not re.match('^\s*$', line)]),
+                           if not re.match(r'^\s*$', line)]),
                fn[:-4])
 
 if __name__ == '__main__':
