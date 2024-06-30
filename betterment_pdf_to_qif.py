@@ -40,12 +40,14 @@ ticker_to_name = {
     'iws': 'iShares Russell Mid-Cap Value ETF',
     'iwn': 'iShares Russell 2000 Value ETF',
     'schv': 'Schwab US Large-Cap Value',
+    'schx': 'Schwab US Large-Cap ETF',
     'itot': 'iShares Core S&P Total U.S. Stock Market ETF',
     'iefa': 'iShares Core MSCI EAFE ETF',
     'jpst': 'JPMorgan Ultra-Short Income ETF (Aggregate Bond)',
     'gbil': 'Goldman Sachs TreasuryAccess 01 Year ETF',
     'spyv': 'SPDR S&P 500 Value ETF',
     'stip': 'iShares 0-5 Year TIPS Bond ETF',
+    'vo': 'Vanguard Mid-Cap Stock ETF',
 }
 
 # New ticker here -- add it , then in Moneydance for the relevant account create
