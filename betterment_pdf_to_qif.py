@@ -18,6 +18,7 @@ mon_to_num = {'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6, 'jul':
 months = mon_to_num.keys()
 
 ticker_to_name = {
+    'bnd': 'Vanguard US Total Bond Market ETF',
     'bndx': 'Total International Bond ETF',
     'vbr': 'Vanguard Small-Cap Value ETF',
     'vti': 'Vanguard Total Stock Market ETF',
