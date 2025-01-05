@@ -20,6 +20,7 @@ months = mon_to_num.keys()
 ticker_to_name = {
     'bnd': 'Vanguard US Total Bond Market ETF',
     'bndx': 'Total International Bond ETF',
+    'iagg': 'iShares Core International Aggregate Bond',
     'vbr': 'Vanguard Small-Cap Value ETF',
     'vti': 'Vanguard Total Stock Market ETF',
     'vtv': 'Vanguard Value ETF',
