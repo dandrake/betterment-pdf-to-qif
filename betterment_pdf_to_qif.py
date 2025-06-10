@@ -50,6 +50,8 @@ ticker_to_name = {
     'spyv': 'SPDR S&P 500 Value ETF',
     'stip': 'iShares 0-5 Year TIPS Bond ETF',
     'vo': 'Vanguard Mid-Cap Stock ETF',
+    'spdw': 'SPDW S&P Word ex-US ETF',
+    'splg': 'SPDR Portfolio S&P 500 ETF',
 }
 
 # New ticker here -- add it , then in Moneydance for the relevant account create
@@ -411,3 +413,5 @@ if __name__ == '__main__':
         run(sys.argv[1])
     except IndexError:
         pass
+
+#  LocalWords:  spdw spdr splg
