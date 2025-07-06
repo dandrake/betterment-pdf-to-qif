@@ -52,6 +52,7 @@ ticker_to_name = {
     'vo': 'Vanguard Mid-Cap Stock ETF',
     'spdw': 'SPDW S&P Word ex-US ETF',
     'splg': 'SPDR Portfolio S&P 500 ETF',
+    'spsm': 'SPDR Portfolio S&P 600 Small Cap ETF',
 }
 
 # New ticker here -- add it , then in Moneydance for the relevant account create
